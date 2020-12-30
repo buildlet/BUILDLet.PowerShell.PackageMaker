@@ -24,7 +24,7 @@
 
 # Required Module:
 $required_module_name = 'BUILDLet.PowerShell.Utilities'
-$required_module_version = '1.5.0'
+$required_module_version = '1.5.1'
 
 # GET Required Module
 $required_module = Get-InstalledModule -Name $required_module_name -RequiredVersion $required_module_version -AllowPrerelease

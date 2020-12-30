@@ -59,15 +59,15 @@ Param(
 <###############################################################################
  Requires
 ################################################################################>
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; RequiredVersion = '1.5.0' }
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; RequiredVersion = '1.5.0' }
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; RequiredVersion = '1.5.1' }
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; RequiredVersion = '1.5.1' }
 
 
 <###############################################################################
  Variable(s)
 ################################################################################>
 # Script Version
-$ScriptVersion = '1.5.0'
+$ScriptVersion = '1.5.1'
 
 # Foreground Color
 $ForegroundColor = 'Green'
