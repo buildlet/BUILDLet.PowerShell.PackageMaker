@@ -1,0 +1,162 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <title>Release Notes</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style type="text/css">
+
+            /* Footer Version */
+            #footer_version:before   { content: "BUILDLet PackageMaker Toolkit"; }
+            #footer_version:after    { content: "1.5.0" }
+
+            /* Footer Copyrgiht */
+            #footer_copyright:before { content: "Copyright (c)"; }
+            #footer_copyright:after  { content: "2015-2020 Daiki Sakamoto All rights reserved."; }
+
+
+            /* All */
+            * { font-family: Arial,sans-serif; }
+
+
+            /* Body */
+            body { background-color: darkgray; }
+
+
+            /* Page */
+            div.page {
+                width: 1024px;
+                background-color: white;
+                margin: auto;
+                padding: 10px 50px 10px 50px;
+            }
+
+
+            /* Section */
+            div.section {
+                margin-bottom: 2em;
+            }
+
+
+            /* Page Footer */
+            div.footer {
+                color: gray;
+                text-align: right;
+                font-size: small;
+                line-height: 0;
+            }
+
+
+            /* Headline */
+            h1 {
+                text-decoration: underline;
+                counter-reset: chapter;
+            }
+
+            h2 {
+                counter-increment: chapter;
+                counter-reset: section;
+            }
+
+            h3 {
+                counter-increment: section;
+                counter-reset: subsection;
+            }
+
+            h4 {
+                counter-increment: subsection;
+            }
+
+            h5 {
+                counter-increment: subsubsection;
+                font-size: medium;
+                margin-bottom: 0;
+            }
+
+            h2:before { content: counter(chapter) ". " }
+            h3:before { content: counter(chapter) "." counter(section) ". " }
+            h4:before { content: counter(chapter) "." counter(section) "." counter(subsection) ". " }
+            h5:before { content: counter(chapter) "." counter(section) "." counter(subsection) "." counter(subsubsection) ". " }
+
+
+            /* Table */
+            table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            tr, td {
+                border: 1px solid;
+                padding: 2px 10px 2px 10px;
+            }
+
+            thead {
+                font-weight: bold;
+                background-color: lightgray;
+            }
+
+            caption {
+                font-weight: bold;
+                margin: 2px 10px 5px 10px;
+            }
+
+
+            /* Driver Number */
+            #table_row_number:before { content: counter(table_row_number_counter) }
+            tr { counter-increment: table_row_number_counter; }
+
+        </style>
+    </head>
+    <body>
+        <!-- Page -->
+        <div class="page">
+        
+            <!-- H1: Release Notes Title -->
+            <h1>Release Notes</h1>
+            
+            <!-- Introduction -->
+            <div class="section">
+                <p>This is Release Notes for <span style="font-weight:bold">__PROJECT_NAME__ Version __PROJECT_VERSION__</span>.</p>
+            </div>
+            
+            
+            <!-- H2: Version Information -->
+            <h2>Version Information</h2>
+           
+            
+            <!-- MODEL(s) -->
+            <div class="section">
+
+                <!-- Model List -->
+                
+            </div>
+            <!-- MODEL(s) -->
+            
+            
+            <!-- H2: Restriction(s) -->
+            <h2>Restriction</h2>
+            
+            <!-- RESTRICTION(s) -->
+            <div class="section">
+
+                <!-- Restriction List -->
+                <ol>
+                    <!-- Restriction Item(s) -->
+                </ol>
+            
+            </div>
+            <!-- RESTRICTION(s) -->
+            
+            
+            <!-- Page Footer -->
+            <div class="footer">
+                <hr class="footer" />
+                <p class="footer" id="footer_version"></p>
+                <p class="footer" id="footer_copyright"></p>
+            </div>
+            <!-- Page Footer -->
+            
+        </div>
+        <!-- Page -->
+        
+    </body>
+</html>

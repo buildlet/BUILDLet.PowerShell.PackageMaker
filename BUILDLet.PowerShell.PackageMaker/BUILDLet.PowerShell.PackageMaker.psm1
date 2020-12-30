@@ -21,7 +21,6 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
 ################################################################################>
-#Requires -Module BUILDLet.PowerShell.Utilities
 
 ################################################################################
 Function Get-WindowsKitsToolPath {
@@ -629,7 +628,7 @@ New-IsoImageFile -Path C:\Input -DestinationPath C:\Release -FileName 'hoge.iso'
 )
 
 #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     Param (
         [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
         [ValidateScript({ Test-Path -Path $_ -PathType Container })]
@@ -685,7 +684,7 @@ New-IsoImageFile -Path C:\Input -DestinationPath C:\Release -FileName 'hoge.iso'
 
     # Input Processing Operations
     Process {
-
+        
         # SET $iso_filepath
         $iso_filepath = $DestinationPath | Join-Path -ChildPath $FileName
 
@@ -711,16 +710,186 @@ New-IsoImageFile -Path C:\Input -DestinationPath C:\Release -FileName 'hoge.iso'
         $ArgumentList += ('-output "' + (ConvertTo-WslPath -Path $iso_filepath) + '"')
         $ArgumentList += ('"' + (ConvertTo-WslPath -Path $Path) + '"')
 
-        # Execute Signtool.exe as command line (OUTPUT)
-        Invoke-Process `
-            -FilePath 'wsl' `
-            -ArgumentList $ArgumentList `
-            -PassThru:$PassThru `
-            -OutputEncoding $OutputEncoding `
-            -Verbose:($VerbosePreference -ne 'SilentlyContinue') `
-            -WhatIf:$WhatIfPreference
+        # ShouldProcess
+        if ($PSCmdlet.ShouldProcess($Path, "Create ISO Image File '$iso_filepath'")) {
+
+            # Execute Signtool.exe as command line (OUTPUT)
+            Invoke-Process `
+                -FilePath 'wsl' `
+                -ArgumentList $ArgumentList `
+                -PassThru:$PassThru `
+                -OutputEncoding $OutputEncoding `
+                -Verbose:($VerbosePreference -ne 'SilentlyContinue') `
+                -WhatIf:$WhatIfPreference
+        }
     }
 
+
+    # Post-Processing Operations
+    # End { }
+}
+#>
+
+####################################################################################################
+Function Expand-InfStringKey {
+<#
+.SYNOPSIS
+INF ファイル内の文字列キーを展開します。
+
+.DESCRIPTION
+入力文字列を INF ファイルのコンテンツとして読み込み、Strings セクションで定義された文字列キーを展開します。
+
+.INPUTS
+System.String
+パイプを使用して、Path パラメーターを Expand-InfStringKey コマンドレットに渡すことができます。
+
+.OUTPUTS
+System.String
+文字列キーを展開した結果の文字列を出力します。
+
+.NOTES
+このコマンドは、文字列キー内の '%' 文字は、'%%' に展開しません。
+
+.EXAMPLE
+$profile = Get-Content -Path 'SAMPLE.INF' -Raw | Expand-InfStringKey -InputObject | Get-PrivateProfile
+SAMPLE.INF 内の文字列キーを展開して、INI ファイルとして読み込みます。
+
+#>
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]
+        # 入力文字列を指定します。
+        $InputObject
+    )
+    
+
+    # Pre-Processing Operations
+    # Begin { }
+
+    
+    # Input Processing Operations
+    Process {
+
+        # Repeat in order to replace strings in the right side
+        while ($true) {
+
+            # GET [Strings] Section from RAW string
+            $Strings = Get-PrivateProfile -InputObject $InputObject -Section 'Strings'
+
+            # Update RAW string
+            $Strings.Keys | ForEach-Object {
+
+                # Replace Strings
+                $InputObject = $InputObject.Replace("%$_%", $Strings[$_])
+            }
+
+            # Exit Condition Check Loop:
+            $InputObject -split [System.Environment]::NewLine | ForEach-Object {
+
+                # GET Line
+                $line = $_
+
+                # for Replacable Strings
+                $Strings.Keys | ForEach-Object {
+
+                    # Check if Strings to be replaced is remaind or not
+                    if ($line -like "*%$_%*") {
+
+                        # Continue
+                        continue
+                    }
+                }
+            }
+
+            # Break
+            break
+        }
+
+        # OUTPUT
+        $InputObject | Write-Output
+    }
+    
+
+    # Post-Processing Operations
+    # End { }
+}
+#>
+
+####################################################################################################
+Function Update-StringsInContent {
+<#
+.SYNOPSIS
+コンテンツ内の文字列を置換します。
+
+.DESCRIPTION
+指定されたファイルのコンテンツに対して、置換対象文字列セットの文字列を検索・置換します。
+
+.INPUTS
+System.String
+パイプを使用して、Path パラメーターを Update-StringsInContent コマンドレットに渡すことができます。
+
+.OUTPUTS
+None
+このコマンドの出力はありません。
+
+.EXAMPLE
+Update-StringsInContent -Path './Readme.txt' -TargetStrings @{ '__DATE__' = 'December 19, 2020', '__VERSION__' = '1.00' }
+Readme.txt 内にある文字列 '__DATE__' および '__VERSION__' を、それぞれ 'December 19, 2020' および '1.00' に置換します。
+
+#>
+    [CmdletBinding(SupportsShouldProcess)]
+    Param (
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
+        [ValidateScript({ Test-Path -Path $_ -PathType Leaf })]
+        [string]
+        # 入力ファイルのパスを指定します。
+        $Path,
+
+        [Parameter(Mandatory = $true, Position = 1)]
+        [hashtable]
+        # 置換対象の文字列セットを指定します。
+        $TargetStrings,
+
+        [Parameter()]
+        [string]
+        # 入力ファイルのエンコーディングを指定します。
+        # 既定のエンコーディングは UTF8 です。
+        $Encoding = 'UTF8'
+    )
+    
+
+    # Pre-Processing Operations
+    # Begin { }
+
+    
+    # Input Processing Operations
+    Process {
+
+        # GET Content as RAW string
+        $content = Get-Content -Path $Path -Encoding $Encoding -Raw
+
+
+        # Replace string(s) in $TargetStrings
+        $TargetStrings.Keys | ForEach-Object {
+
+            # GET target & destination string
+            $target = $_
+            $destination = $TargetStrings.$_
+
+            # UPDATE (Replace) Content
+            $content = $content -replace $target, $destination
+        }
+
+
+        # ShouldProcess
+        if ($PSCmdlet.ShouldProcess($Path, 'Replace the strings by $TargetStrings')) {
+
+            # OUTPT to File
+            $content | Out-File -FilePath $Path -Encoding $Encoding -NoNewline
+        }
+    }
+    
 
     # Post-Processing Operations
     # End { }

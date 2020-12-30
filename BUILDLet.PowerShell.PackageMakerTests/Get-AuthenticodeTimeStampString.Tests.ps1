@@ -76,6 +76,9 @@ Describe "Get-AuthenticodeTimeStampString" {
             Param($TestDirName, $SignToolVersion, $SignToolPlatform, $SignToolPath, $FilePath, $Verbose)
 
 
+            # ARRANGE: NEW $TestPackage
+            New-Item -Path ($TargetDir | Join-Path -ChildPath 'TestPackage') -ItemType Directory -Force
+
             # ARRANGE: Set Location
             Set-Location -Path ($TargetDir | Join-Path -ChildPath $TestDirName)
 
