@@ -12,7 +12,7 @@
 RootModule = 'BUILDLet.PowerShell.PackageMaker.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.4.3'
+ModuleVersion = '1.5.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -52,7 +52,7 @@ Description = 'BUILDLet PackageMaker Toolkit for PowerShell'
 
 # Modules that must be imported into the global environment prior to importing this module
 RequiredModules = @(
-    'BUILDLet.PowerShell.Utilities'
+    @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; RequiredVersion = '1.5.0' }
 )
 
 # Assemblies that must be loaded prior to importing this module
@@ -77,6 +77,8 @@ FunctionsToExport = @(
     'Get-AuthenticodeTimeStampString'
     'Invoke-Inf2Cat'
     'New-ISOImageFile'
+    'Expand-InfStringKey'
+    'Update-StringsInContent'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -123,13 +125,15 @@ PrivateData = @{
         # ReleaseNotes = ''
 
         # Prerelease string of this module
-        # Prerelease = 'beta2'
+        # Prerelease = 'beta4'
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false
 
         # External dependent modules of this module
-        # ExternalModuleDependencies = @()
+        ExternalModuleDependencies = @(
+            'BUILDLet.PowerShell.Utilities'
+        )
 
     } # End of PSData hashtable
 

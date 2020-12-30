@@ -26,7 +26,6 @@
 <###############################################################################
  Parameter(s)
 ################################################################################>
-
 Param(
     [Parameter()]
     [ValidateScript({ Test-Path -Path $_ })]
@@ -39,293 +38,257 @@ Param(
 <###############################################################################
  Requires
 ################################################################################>
-#Requires -Modules BUILDLet.PowerShell.Utilities
-#Requires -Modules BUILDLet.PowerShell.PackageMaker
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; RequiredVersion = '1.5.0' }
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; RequiredVersion = '1.5.0' }
 
 
 <###############################################################################
  Variable(s)
 ################################################################################>
-$ScriptVersion = '1.0.0.0'
+# Script Version
+$ScriptVersion = '1.5.0'
+
+# Foreground Color
+$ForegroundColor = 'Green'
 
 
 <###############################################################################
  Function(s)
 ################################################################################>
-Function PrintTask ($taskNum, $task, $arg) {
+Function ConvertFrom-Expression($expression) {
 
-    # OUTPUT
-    ("Task[$taskNum]: $task $arg") | Write-Host -ForegroundColor $ForegroundColor
-}
+    # Null Check
+    if ($null -ne $expression) {
 
-Function GetParameters ($words) {
+        if ($expression.Trim() -like '{*}') {
 
-    # Container for return value
-    $params = @{}
+            # UPDATE $expression (Remove outer '{}')
+            $expression = $expression.Trim().Substring(1, $expression.Trim().Length - 2).Trim()
 
+            if ($expression -like '{*}') {
 
-    # for words
-    $words | ForEach-Object {
-
-        # GET word
-        $word = $_
-
-        if (-not $word.Contains('=')) {
-            
-            # Parameters:
-
-            # GET Section of PARAMETERS from word
-            $section = $Settings[$word]
-
-            # for section of 1st word
-            $section.Keys | ForEach-Object {
-
-                # GET Parameter
-                $param_name = $_.Trim()
-                $param_value = $section[$_].Trim()
-        
-                # OUTPUT
-                "    + '$param_name' = '$param_value'" | Write-Host -ForegroundColor $ForegroundColor
-        
-                # ADD Parameter
-                $params += @{ $param_name = $param_value }
+                # RETURN $expression w/o outer '{}'
+                return $expression
             }
-        }
-        else {
-
-            # Parameter Name and its value array:
-
-            # GET Parameter Name, Section Name of parameter value array and its content
-            $param_name = $word.Split('=')[0].Trim()
-            $param_value_section_name = $word.Split('=')[1].Trim()
-            $param_value_section = $Settings[$param_value_section_name]
-
-            # Container of parameter value array
-            $param_value_array = @()
-
-            # for parameter value array
-            $param_value_section.Keys | Sort-Object | ForEach-Object {
-
-                # GET Key number of parameter value array
-                $numkey = $_.Trim()
-
-                # GET Value of parameter value array
-                $param_value = $param_value_section[$numkey].Trim()
-
-                # OUTPUT
-                "    + '$param_name'[$numkey] = '$param_value'" | Write-Host -ForegroundColor $ForegroundColor
-
-                # ADD Value
-                $param_value_array += $param_value_section[$numkey].Trim()
+            else {
+                
+                # RETURN $expression executed result
+                return (Invoke-Expression -Command $expression)
             }
-
-            # ADD Parameter
-            $params += @{ $param_name = $param_value_array }
         }
     }
 
+    # RETURN original $expression
+    return $expression
 
-    # RETURN
-    return $params
 }
+
 
 <###############################################################################
  Process
 ################################################################################>
-
-# OUTPUT
-''
-'[' + $MyInvocation.MyCommand + '] is reading the Settings...'
-
-# GET Settings from Settings File (.ini)
-$Settings = . ($PSScriptRoot | Join-Path -ChildPath 'Get-Settings.ps1') -Path $Path
-
-
-# SET Preferences and Variable(s)
-$Script:ErrorActionPreference = $Settings.'Preferences'.'ErrorActionPreference'
-$Script:VerbosePreference = $Settings.'Preferences'.'VerbosePreference'
-$ForegroundColor = $Settings.'Preferences'.'ForegroundColor'
-
-
-# START Message
+# OUTPUT: START Message
 @"
-***********************************************
- BUILDLet PackageMaker Toolkit for PowerShell
+************************************************
+  BUILDLet PackageMaker Toolkit for PowerShell
  (BUILDLet.PowerShell.PackageMaker)
- Sample Package Build Script (Version $ScriptVersion)
- Copyright (C) 2020 Daiki Sakamoto
-***********************************************
+  Build Script Version $ScriptVersion
+  Copyright (C) 2020 Daiki Sakamoto
+************************************************
 "@ |
 Write-Host -ForegroundColor $ForegroundColor
 
-# START Time
-'START: ' + ($StartTime = Get-Date).ToString('yyyy/MM/dd hh:mm:ss') |
-Write-Host -ForegroundColor $ForegroundColor
+# OUTPUT: START Time & $Path (Setting File Name)
+($StartTime = Get-Date).ToString('yyyy/MM/dd hh:mm:ss') + ' [START]' | Write-Host -ForegroundColor $ForegroundColor
+
+# OUTPUT
+"Read Settings from '$Path'..." | Write-Host -ForegroundColor $ForegroundColor
+
+# GET Settings from Settings File (.ini)
+$Settings = Get-PrivateProfile -InputObject (Get-Content -Path $Path -Raw | Expand-InfStringKey -ErrorAction 'Stop') -ErrorAction 'Stop'
+
+# OUTPUT
+# (Get-Date).ToString('yyyy/MM/dd hh:mm:ss') | Write-Host -ForegroundColor $ForegroundColor
 
 
-# Do Tasks
-$Settings.'Tasks'.Keys | Sort-Object | ForEach-Object {
+# GET Preferences
+if ($Settings.ContainsKey('Preferences')) {
 
-    # GET Key, Value, Task, and continuing Words
+    # VerbosePreference
+    if ($Settings.'Preferences'.ContainsKey('VerbosePreference')) {
+
+        # SET VerbosePreference
+        $Script:VerbosePreference = $Settings.'Preferences'.'VerbosePreference'
+    }
+
+    # ErrorActionPreference
+    if ($Settings.'Preferences'.ContainsKey('ErrorActionPreference')) {
+
+        # SET ErrorActionPreference
+        $Script:ErrorActionPreference = $Settings.'Preferences'.'ErrorActionPreference'
+    }
+
+}
+
+
+# for each Tasks
+$Settings.'Tasks'.Keys | ForEach-Object {
+
+    # GET Key & Value
     $key = $_
-    $value = $Settings.'Tasks'.$Key
-    $task = $value.Split(':')[0]
-    $words = @($value.Split(':')[1].Split(','))
+    $value = $Settings.'Tasks'.$key
 
-    # Switch Tasks
-    switch ($task) {
+    # GET Task & Command
+    $Task = $value
+    $Command = $Settings.$Task.'Command'
 
-        'Remove' {
+    # OUTPUT: Key, Task, Command
+    ''
+    "Task[$key]: $Task" | Write-Host -ForegroundColor $ForegroundColor
+    "  $Command" | Write-Host -ForegroundColor $ForegroundColor
 
-            # SET Variable(s)
-            $item = $words[0].Trim()
 
-            # OUTPUT
-            PrintTask $key $task "'$item'"
+    # GET Command Parameter(s)
+    $Parameters = @{}
+    $Settings.$Task.Keys | Where-Object { $_ -ne 'Command' } | ForEach-Object {
 
-            # Remove Item (File or Directory)
-            if (Test-Path -Path $item) { Remove-Item -Path $item -Recurse -Force }
+        # GET Parameter Name & Value
+        $param_name = $_
+        $param_value = $Settings.$Task.$_
+
+        # SET NullOutput Flag: If outout should be redirected, or not.
+        $NullOutput = ($param_name -eq '>null')
+
+        # SET VariableOutput Flag 
+        $VariableOutput = ($param_name -like '->*')
+
+
+        # BUILD Command Parameter(s)
+        if ((-not $NullOutput) -and (-not $VariableOutput)) {
+
+            # UPDATE Parameter Value as Array or Hashtable
+            if ($param_value -like "$Task*") {
+
+                # Check if all Keys are int, or not
+                $int_Keys = @()
+                $parsed = -1
+                $Settings.$param_value.Keys | ForEach-Object { $int_Keys += [int]::TryParse($_, [ref]$parsed) }
+
+                if ($int_Keys -notcontains $false) {
+                
+                    # BUILD Parameter as Array
+                    $param_array = @()
+                    $Settings.$param_value.Keys | Sort-Object | Where-Object {
+
+                        # ADD value of Parameter Array
+                        $param_array += ConvertFrom-Expression($Settings.$param_value.$_)
+                    }
+                    $param_value = $param_array
+                }
+                else {
+                    
+                    # BUILD Parameter as Hashtable
+                    $param_hashtable = @{}
+                    $Settings.$param_value.Keys | Where-Object {
+
+                        # ADD value of Parameter Hashtable
+                        $param_hashtable += @{ $_ = ConvertFrom-Expression($Settings.$param_value.$_) }
+                    }
+                    $param_value = $param_hashtable
+                }
+            }
+            else {
+
+                # Execute Expression if needed
+                $param_value = ConvertFrom-Expression($param_value)
+            }
+
+            # ADD Parameter
+            $Parameters += @{ $param_name = $param_value }
+
+            # OUTPUT: Command Parameter(s)
+            if ($param_value -is [array]) {
+
+                # OUTPUT: Parameter as Array
+                "    -$param_name {" | Write-Host -ForegroundColor $ForegroundColor
+                for ($i = 0; $i -lt $param_value.Count; $i++) {
+                    ("      " + $param_value[$i]) | Write-Host -ForegroundColor $ForegroundColor
+                }
+                "    }" | Write-Host -ForegroundColor $ForegroundColor
+            }
+            elseif ($param_value -is [hashtable]) {
+
+                # OUTPUT: Parameter as Hashtable
+                "    -$_ {" | Write-Host -ForegroundColor $ForegroundColor
+                $param_value.Keys | ForEach-Object {
+                    ("      " + $_ + ' = ' + $param_value.$_) | Write-Host -ForegroundColor $ForegroundColor
+                }
+                "    }" | Write-Host -ForegroundColor $ForegroundColor
+            }
+            else {
+
+                # OUTPUT: Parameter (NOT Array / Hashtable)
+                ("    -$_ " + $param_value) | Write-Host -ForegroundColor $ForegroundColor
+            }
         }
 
-        'MkDir' {
 
-            # SET Variable(s)
-            $dir = $words[0].Trim()
-
-            # OUTPUT
-            PrintTask $key $task "'$item'"
-
-            # NEW Directory
-            New-Item -Path $dir -ItemType Directory -Force > $null
-        }
-
-        'Copy' {
-
-            # SET Variable(s)
-            $src = $words[0].Trim()
-            $dest = $words[1].Trim()
-
-            # OUTPUT
-            PrintTask $key $task "'$src' -> '$dest'"
-
-            # COPY File
-            Copy-Item -Path $src -Destination $dest -Recurse -Force
-        }
-
-        'Move' {
-
-            # SET Variable(s)
-            $src = $words[0].Trim()
-            $dest = $words[1].Trim()
-
-            # OUTPUT
-            PrintTask $key $task "'$src' -> '$dest'"
-
-            # MOVE Item (File or Directory)
-            Move-Item -Path $src -Destination $dest -Force
-        }
-
-        'Rename' {
-
-            # SET Variable(s)
-            $src = $words[0].Trim()
-            $dest = $words[1].Trim()
-
-            # OUTPUT
-            PrintTask $key $task "'$src' -> '$dest'"
-
-            # RENAME Item (File or Directory)
-            Rename-Item -Path $src -NewName $dest -Force
-        }
-
-        'Expand' {
-
-            # SET Variable(s)
-            $src = $words[0].Trim()
-            $dest = $words[1].Trim()
-            $passwd = $words[2].Trim()
-
-            # OUTPUT
-            PrintTask $key $task "'$src' -> '$dest'"
-
-            # Expand Zip File
-            Expand-ZipFile -Path $src -DestinationPath $dest -Password $passwd -Force -Verbose:($VerbosePreference -ne 'SilentlyContinue') > $null
-        }
-
-        'Zip' {
-
-            # SET Variable(s)
-            $src = $words[0].Trim()
-            $dest = $words[1].Trim()
-            $passwd = $words[2].Trim()
-
-            # OUTPUT
-            PrintTask $key $task "'$src' -> '$dest'"
-
-            # NEW Zip File
-            New-ZipFile -Path $src -DestinationPath $dest -Password $passwd -Force -Verbose:($VerbosePreference -ne 'SilentlyContinue')
-        }
-
-        'Sign' {
-
-            # OUTPUT
-            PrintTask $key $task
-
-            # GET Parameters
-            $params = GetParameters $words
-
-            # ADD Signature
-            Invoke-SignTool @params -Command 'sign' -Verbose:($VerbosePreference -ne 'SilentlyContinue')
-        }
-
-        'Inf2Cat' {
-
-            # OUTPUT
-            PrintTask $key $task
-
-            # GET Parameters
-            $params = GetParameters $words
-
-            # NEW Catalog File
-            Invoke-Inf2Cat @params -Verbose:($VerbosePreference -ne 'SilentlyContinue')
-        }
-
-        'GenIsoImage' {
-
-            # OUTPUT
-            PrintTask $key $task
-
-            # GET Parameters
-            $params = GetParameters $words
-
-            # NEW ISO Image File
-            New-IsoImageFile @params -Force -Verbose:($VerbosePreference -ne 'SilentlyContinue')
-        }
-
-        'Readme' {
-
-            # OUTPUT
-            PrintTask $key $task
-
-            # GET Parameters
-            $params = GetParameters $words
-
-            # NEW ISO Image File
-            .\Update-Readme.ps1 @params -Verbose:($VerbosePreference -ne 'SilentlyContinue')
-        }
-
-        Default {
-            # Throw NotSupportedExcepction
-            throw New-Object System.NotSupportedException
+        # GET Variable Name
+        $var_name > $null
+        if ($VariableOutput) {
+            $var_name = $param_name.Substring('->'.Length).Trim()
         }
     }
-    # Switch Tasks
-}
-# Do Tasks
 
+
+    # Keys includes 'Command' 
+    if ($null -ne $Command) {
+
+        # GET Expression
+        $Expression = $Command
+        if ($Parameters.Count -gt 0) { $Expression += ' @Parameters' }
+        $Expression += ' -Verbose:($Script:VerbosePreference -ne "SilentlyContinue")'
+        if ($null -ne $Script:ErrorActionPreference) { $Expression += ' -ErrorAction $Script:ErrorActionPreference' }
+
+        # Verbose Output: Expression
+        "Expression = $Expression" | Write-Verbose
+
+
+        # Execute Command with Parameter(s)
+        Invoke-Expression -Command $Expression | ForEach-Object {
+
+            # GET Result
+            $result = $_
+
+            # Switch output
+            if ($NullOutput) {
+
+                # Redirect output to NULL
+                $result > $null
+            }
+            elseif ($VariableOutput) {
+
+                # Redirect output to Variable
+                $result | Set-Variable -Name $var_name -Scope 'Script'
+
+                # OUTPUT Variable Name & Value
+                "  Variable '$var_name' = $result" | Write-Host -ForegroundColor $ForegroundColor
+            }
+            else {
+
+                # DO NOT Redirect output to NULL
+                $result
+            }
+        }
+    }
+}
+# for each Tasks
+
+
+# GET End Time & its Text
+$EndTimeText = ($EndTime = Get-Date).ToString('yyyy/MM/dd hh:mm:ss')
 
 # END Time (and Elapsed Time)
-'END: ' + ($EndTime = Get-Date).ToString('yyyy/MM/dd hh:mm:ss') +
-" (Elapsed Time: " + ($EndTime - $StartTime).ToString() + ")" |
-Write-Host -ForegroundColor $ForegroundColor
+''
+"$EndTimeText [END] (Elapsed Time = " + ($EndTime - $StartTime).ToString() + ")" | Write-Host -ForegroundColor $ForegroundColor
 #>
