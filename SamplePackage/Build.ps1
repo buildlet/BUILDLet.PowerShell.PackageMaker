@@ -22,10 +22,7 @@
  THE SOFTWARE.
 ################################################################################>
 
-
-<###############################################################################
- Parameter(s)
-################################################################################>
+# Parameter(s)
 Param(
     [Parameter()]
     [ValidateScript({ Test-Path -Path $_ })]
@@ -35,26 +32,23 @@ Param(
 )
 
 
-<###############################################################################
- Requires
-################################################################################>
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.5.2' }
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.5.2' }
+# Required Module(s)
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.0' }
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.0' }
 
 
-<###############################################################################
- Variable(s)
-################################################################################>
 # Script Version
-$ScriptVersion = '1.5.3'
+$ScriptVersion = '1.6.0'
 
 # Foreground Color
 $ForegroundColor = 'Green'
 
 
-<###############################################################################
- Function(s)
-################################################################################>
+################################################################################
+# Function(s)
+################################################################################
+
+# ConvertFrom-Expression
 Function ConvertFrom-Expression($expression) {
 
     # Null Check
@@ -80,26 +74,26 @@ Function ConvertFrom-Expression($expression) {
 
     # RETURN original $expression
     return $expression
-
 }
 
 
-<###############################################################################
- Process
-################################################################################>
+################################################################################
+# START
+################################################################################
+
 # OUTPUT: START Message
 @"
 ************************************************
-  BUILDLet PackageMaker Toolkit for PowerShell
+ BUILDLet PackageMaker Toolkit for PowerShell
  (BUILDLet.PowerShell.PackageMaker)
-  Build Script Version $ScriptVersion
-  Copyright (C) 2020 Daiki Sakamoto
+ Build Script Version $ScriptVersion
+ Copyright (C) 2020 Daiki Sakamoto
 ************************************************
 "@ |
 Write-Host -ForegroundColor $ForegroundColor
 
 # OUTPUT: START Time & $Path (Setting File Name)
-($StartTime = Get-Date).ToString('yyyy/MM/dd hh:mm:ss') + ' [START]' | Write-Host -ForegroundColor $ForegroundColor
+($StartTime = Get-Date).ToString('yyyy/MM/dd hh:mm:ss') + ' <<<< START >>>>' | Write-Host -ForegroundColor $ForegroundColor
 
 # OUTPUT
 "Read Settings from '$Path'..." | Write-Host -ForegroundColor $ForegroundColor
@@ -107,27 +101,36 @@ Write-Host -ForegroundColor $ForegroundColor
 # GET Settings from Settings File (.ini)
 $Settings = Get-PrivateProfile -InputObject (Get-Content -Path $Path -Raw | Expand-InfStringKey -ErrorAction 'Stop') -ErrorAction 'Stop'
 
-# OUTPUT
-# (Get-Date).ToString('yyyy/MM/dd hh:mm:ss') | Write-Host -ForegroundColor $ForegroundColor
 
-
-# GET Preferences
+# GET & SET Preferences
 if ($Settings.ContainsKey('Preferences')) {
 
-    # VerbosePreference
-    if ($Settings.'Preferences'.ContainsKey('VerbosePreference')) {
+    @('VerbosePreference', 'ErrorActionPreference') | ForEach-Object {
 
-        # SET VerbosePreference
-        $Script:VerbosePreference = $Settings.'Preferences'.'VerbosePreference'
+        # GET Preference
+        $pref = $_
+
+        if ($Settings.'Preferences'.ContainsKey($pref)) {
+
+            # SET Preference
+            switch ($pref) {
+                'VerbosePreference' {
+                    
+                    # SET VerbosePreference
+                    $Script:VerbosePreference = $Settings.'Preferences'.$pref
+                }
+                'ErrorActionPreference' {
+
+                    # SET ErrorActionPreference
+                    $Script:ErrorActionPreference = $Settings.'Preferences'.$pref
+                }
+                Default {}
+            }
+
+            # OUTPUT Preference
+            ("Set `$Script:$pref = '" + ($Settings.'Preferences'.$pref) + "'") | Write-Host -ForegroundColor $ForegroundColor
+        }
     }
-
-    # ErrorActionPreference
-    if ($Settings.'Preferences'.ContainsKey('ErrorActionPreference')) {
-
-        # SET ErrorActionPreference
-        $Script:ErrorActionPreference = $Settings.'Preferences'.'ErrorActionPreference'
-    }
-
 }
 
 
@@ -142,32 +145,37 @@ $Settings.'Tasks'.Keys | ForEach-Object {
     $Task = $value
     $Command = $Settings.$Task.'Command'
 
-    # OUTPUT: Key, Task, Command
+    # OUTPUT: Key, Task and Command
     ''
     "Task[$key]: $Task" | Write-Host -ForegroundColor $ForegroundColor
     "  $Command" | Write-Host -ForegroundColor $ForegroundColor
 
-
     # GET Command Parameter(s)
     $Parameters = @{}
+    $OutputRedirection = $null
     $Settings.$Task.Keys | Where-Object { $_ -ne 'Command' } | ForEach-Object {
 
         # GET Parameter Name & Value
         $param_name = $_
         $param_value = $Settings.$Task.$_
 
-        # SET NullOutput Flag: If outout should be redirected, or not.
-        $NullOutput = ($param_name -eq '>null')
+        # Check Parameter
+        if (($param_name -match '\> *\$null') -and ($null -eq $param_value)) {
 
-        # SET VariableOutput Flag 
-        $VariableOutput = ($param_name -like '->*')
+            # Parameter is Output Null Redirection
 
+            # SET Null Output Redirection
+            $OutputRedirection = $param_name
 
-        # BUILD Command Parameter(s)
-        if ((-not $NullOutput) -and (-not $VariableOutput)) {
+            # To avoid UseDeclaredVarsMoreThanAssignments (#0414)
+            $OutputRedirection > $null
+        }
+        else {
+        
+            # BUILD Command Parameter(s)
 
             # UPDATE Parameter Value as Array or Hashtable
-            if ($param_value -like "$Task*") {
+            if ($param_value -like "$Task.*") {
 
                 # Check if all Keys are int, or not
                 $int_Keys = @()
@@ -231,64 +239,43 @@ $Settings.'Tasks'.Keys | ForEach-Object {
                 ("    -$_ " + $param_value) | Write-Host -ForegroundColor $ForegroundColor
             }
         }
-
-
-        # GET Variable Name
-        $var_name > $null
-        if ($VariableOutput) {
-            $var_name = $param_name.Substring('->'.Length).Trim()
-        }
     }
 
+    # OUTPUT: Append Output Redirection
+    if ($OutputRedirection) {
+        "    $OutputRedirection" | Write-Host -ForegroundColor $ForegroundColor
+    }
 
     # Keys includes 'Command' 
     if ($null -ne $Command) {
 
         # GET Expression
         $Expression = $Command
+
+        # Append Parameters to Expression
         if ($Parameters.Count -gt 0) { $Expression += ' @Parameters' }
+
+        # Append VerbosePreferences to Expression
         $Expression += ' -Verbose:($Script:VerbosePreference -ne "SilentlyContinue")'
         if ($null -ne $Script:ErrorActionPreference) { $Expression += ' -ErrorAction $Script:ErrorActionPreference' }
+
+        # Append Output Redirection to Expression
+        $Expression += " $OutputRedirection"
 
         # Verbose Output: Expression
         "Expression = $Expression" | Write-Verbose
 
-
         # Execute Command with Parameter(s)
-        Invoke-Expression -Command $Expression | ForEach-Object {
-
-            # GET Result
-            $result = $_
-
-            # Switch output
-            if ($NullOutput) {
-
-                # Redirect output to NULL
-                $result > $null
-            }
-            elseif ($VariableOutput) {
-
-                # Redirect output to Variable
-                $result | Set-Variable -Name $var_name -Scope 'Script'
-
-                # OUTPUT Variable Name & Value
-                "  Variable '$var_name' = $result" | Write-Host -ForegroundColor $ForegroundColor
-            }
-            else {
-
-                # DO NOT Redirect output to NULL
-                $result
-            }
-        }
+        Invoke-Expression -Command $Expression
     }
 }
 # for each Tasks
 
 
-# GET End Time & its Text
+# GET End Time (as Formated Text)
 $EndTimeText = ($EndTime = Get-Date).ToString('yyyy/MM/dd hh:mm:ss')
 
-# END Time (and Elapsed Time)
+# OUTPUT: END Time (and Elapsed Time)
 ''
-"$EndTimeText [END] (Elapsed Time = " + ($EndTime - $StartTime).ToString() + ")" | Write-Host -ForegroundColor $ForegroundColor
+"$EndTimeText <<<< END >>>> (Elapsed Time = " + ($EndTime - $StartTime).ToString() + ")" | Write-Host -ForegroundColor $ForegroundColor
 #>

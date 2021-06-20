@@ -12,7 +12,7 @@
 RootModule = 'BUILDLet.PowerShell.PackageMaker.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.5.3'
+ModuleVersion = '1.6.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -52,7 +52,7 @@ Description = 'BUILDLet PackageMaker Toolkit for PowerShell'
 
 # Modules that must be imported into the global environment prior to importing this module
 RequiredModules = @(
-    @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.5.2' }
+    @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.0' }
 )
 
 # Assemblies that must be loaded prior to importing this module
@@ -78,7 +78,6 @@ FunctionsToExport = @(
     'Invoke-Inf2Cat'
     'New-ISOImageFile'
     'Expand-InfStringKey'
-    'Update-StringsInContent'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
