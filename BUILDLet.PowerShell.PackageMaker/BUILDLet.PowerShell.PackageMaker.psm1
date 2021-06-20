@@ -32,7 +32,7 @@ Windows 10 SDK や Windows Driver Kit (WDK for Windows 10) に含まれるツー
 .DESCRIPTION
 Windows 10 SDK や WDK for Windows 10 がインストール済みのシステムで、各種ツールの実行ファイル (*.exe) のパスを取得します。
 
-.INPUTS 
+.INPUTS
 System.String
 パイプを使用して、FileName パラメーターをこのコマンドに渡すことができます。
 
@@ -46,7 +46,7 @@ C:\Program Files\Windows Kits\10\bin\<$Version>\<$Platform>\<$FileName>
 (x64 の場合は C:\Program Files (x86)\Windows Kits\10\bin\<$Version>\<$Platform>\<$FileName>)
 か、あるいは
 C:\Program Files\Windows Kits\10\bin\<$Platform>\<$FileName>
-(x64 の場合は C:\Program Files (x86)\Windows Kits\10\bin\<$Platform>\<$FileName>) 
+(x64 の場合は C:\Program Files (x86)\Windows Kits\10\bin\<$Platform>\<$FileName>)
 にインストールされています。
 
 .EXAMPLE
@@ -136,7 +136,7 @@ SignTool.exe  (署名ツール) を実行します。
 SignTool.exe  (署名ツール) を実行します。
 署名ツールはコマンド ライン ツールで、ファイルにデジタル署名を添付し、ファイルの署名を検証し、ファイルにタイム スタンプを付けます。
 
-.INPUTS 
+.INPUTS
 System.String
 パイプを使用して、SignToolPath パラメーターを Invoke-SignTool コマンドレットに渡すことができます。
 
@@ -194,15 +194,15 @@ https://msdn.microsoft.com/ja-jp/library/8s9b9yaz.aspx
         [Parameter(Position = 1, ParameterSetName = 'SignToolPath')]
         [ValidateSet('sign', 'timestamp', 'verify', 'catdb', 'remove')]
         [string]
-        # 5 つのコマンド (sign、timestamp、verify、catdb または remove) のうちのいずれか 1 つを指定します。  
+        # 5 つのコマンド (sign、timestamp、verify、catdb または remove) のうちのいずれか 1 つを指定します。
         $Command,
-        
+
         [Parameter(Position = 3, ParameterSetName = 'SignToolVersion')]
         [Parameter(Position = 2, ParameterSetName = 'SignToolPath')]
         [string[]]
         # SignTool.exe へのオプションを文字列の配列として指定します。
         $Options,
-        
+
         [Parameter(Position = 4, ParameterSetName = 'SignToolVersion', ValueFromPipeline = $true)]
         [Parameter(Position = 3, ParameterSetName = 'SignToolPath', ValueFromPipeline = $true)]
         [string[]]
@@ -684,7 +684,7 @@ New-IsoImageFile -Path C:\Input -DestinationPath C:\Release -FileName 'hoge.iso'
 
     # Input Processing Operations
     Process {
-        
+
         # SET $iso_filepath
         $iso_filepath = $DestinationPath | Join-Path -ChildPath $FileName
 
@@ -762,12 +762,12 @@ SAMPLE.INF 内の文字列キーを展開して、INI ファイルとして読�
         # 入力文字列を指定します。
         $InputObject
     )
-    
+
 
     # Pre-Processing Operations
     # Begin { }
 
-    
+
     # Input Processing Operations
     Process {
 
@@ -809,87 +809,7 @@ SAMPLE.INF 内の文字列キーを展開して、INI ファイルとして読�
         # OUTPUT
         $InputObject | Write-Output
     }
-    
 
-    # Post-Processing Operations
-    # End { }
-}
-#>
-
-####################################################################################################
-Function Update-StringsInContent {
-<#
-.SYNOPSIS
-コンテンツ内の文字列を置換します。
-
-.DESCRIPTION
-指定されたファイルのコンテンツに対して、置換対象文字列セットの文字列を検索・置換します。
-
-.INPUTS
-System.String
-パイプを使用して、Path パラメーターを Update-StringsInContent コマンドレットに渡すことができます。
-
-.OUTPUTS
-None
-このコマンドの出力はありません。
-
-.EXAMPLE
-Update-StringsInContent -Path './Readme.txt' -TargetStrings @{ '__DATE__' = 'December 19, 2020', '__VERSION__' = '1.00' }
-Readme.txt 内にある文字列 '__DATE__' および '__VERSION__' を、それぞれ 'December 19, 2020' および '1.00' に置換します。
-
-#>
-    [CmdletBinding(SupportsShouldProcess)]
-    Param (
-        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
-        [ValidateScript({ Test-Path -Path $_ -PathType Leaf })]
-        [string]
-        # 入力ファイルのパスを指定します。
-        $Path,
-
-        [Parameter(Mandatory = $true, Position = 1)]
-        [hashtable]
-        # 置換対象の文字列セットを指定します。
-        $TargetStrings,
-
-        [Parameter()]
-        [string]
-        # 入力ファイルのエンコーディングを指定します。
-        # 既定のエンコーディングは UTF8 です。
-        $Encoding = 'UTF8'
-    )
-    
-
-    # Pre-Processing Operations
-    # Begin { }
-
-    
-    # Input Processing Operations
-    Process {
-
-        # GET Content as RAW string
-        $content = Get-Content -Path $Path -Encoding $Encoding -Raw
-
-
-        # Replace string(s) in $TargetStrings
-        $TargetStrings.Keys | ForEach-Object {
-
-            # GET target & destination string
-            $target = $_
-            $destination = $TargetStrings.$_
-
-            # UPDATE (Replace) Content
-            $content = $content -replace $target, $destination
-        }
-
-
-        # ShouldProcess
-        if ($PSCmdlet.ShouldProcess($Path, 'Replace the strings by $TargetStrings')) {
-
-            # OUTPT to File
-            $content | Out-File -FilePath $Path -Encoding $Encoding -NoNewline
-        }
-    }
-    
 
     # Post-Processing Operations
     # End { }
