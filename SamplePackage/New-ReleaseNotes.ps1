@@ -60,12 +60,12 @@ Param(
 
 
 # Required Module(s)
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.0' }
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.0' }
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.2' }
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.2' }
 
 
 # SET Script Version
-$ScriptVersion = '1.6.0'
+$ScriptVersion = '1.6.2'
 
 # RETURN: Version
 if ($Version) { return $ScriptVersion }
@@ -144,8 +144,8 @@ $Path | Get-ChildItem -Directory | ForEach-Object {
     # Paremeter (H3) for New-BaseHtmlRawContent function
     $parmeter_H3 = @{
         Path = $model_dir_path
-        BaseHtmlFilePath = './ReleaseNotes_H3.Model.html'
-        TargetString = '__MODEL_NAME__'
+        BaseHtmlFilePath = './ReleaseNotes_Level-1_H3.html'
+        TargetString = '__LEVEL1_TITLE__'
         StringTable = $StringTable
     }
 
@@ -165,8 +165,8 @@ $Path | Get-ChildItem -Directory | ForEach-Object {
         # Paremeter (H4) for New-BaseHtmlRawContent function
         $parmeter_H4 = @{
             Path = $driver_dir_path
-            BaseHtmlFilePath = './ReleaseNotes_H4.Driver.html'
-            TargetString = '__DRIVER_NAME__'
+            BaseHtmlFilePath = './ReleaseNotes_Level-2_H4.html'
+            TargetString = '__LEVEL2_TITLE__'
             StringTable = $StringTable
         }
 
@@ -186,8 +186,8 @@ $Path | Get-ChildItem -Directory | ForEach-Object {
             # Paremeter (H5) for New-BaseHtmlRawContent function
             $parmeter_H5 = @{
                 Path = $lang_dir_path
-                BaseHtmlFilePath = './ReleaseNotes_H5.Language.html'
-                TargetString = '__LANGUAGE_NAME__'
+                BaseHtmlFilePath = './ReleaseNotes_Level-3_H5.html'
+                TargetString = '__LEVEL3_TITLE__'
                 StringTable = $StringTable
             }
 
@@ -215,7 +215,9 @@ $Path | Get-ChildItem -Directory | ForEach-Object {
                 $package_dir_path = $arch_dir_path
 
                 # GET Settings from INF File
-                $inf_settings = Get-PrivateProfile -Path ($package_dir_path | Join-Path -ChildPath "Dummy*.INF")
+                $inf_settings = Get-PrivateProfile `
+                    -Path ($package_dir_path | Join-Path -ChildPath "*.INF") `
+                    -IgnoreDuplicatedEntry
 
                 # GET Driver Name, Date & Version from INF Settings
                 $driver_name = ($inf_settings.'Strings'.'PRINTER' -split '"')[1]
@@ -224,15 +226,15 @@ $Path | Get-ChildItem -Directory | ForEach-Object {
 
                 # GET Driver Signer Name
                 $driver_signer_name = Get-AuthenticodeSignerName `
-                    -FilePath ($package_dir_path | Join-Path -ChildPath "dummy*.cat")
+                    -FilePath ($package_dir_path | Join-Path -ChildPath "*.CAT")
 
                 # GET Driver Signature Timestamp
                 $driver_signature_timestamp = Get-AuthenticodeTimeStampString `
-                    -FilePath ($package_dir_path | Join-Path -ChildPath "dummy*.cat")
+                    -FilePath ($package_dir_path | Join-Path -ChildPath "*.CAT")
 
                 # GET RAW content of TR: Version
                 $version_RAW_content = `
-                    Get-Content -Path './ReleaseNotes_TR.Version.html' -Raw | `
+                    Get-Content -Path './ReleaseNotes_Level-4_TR.html' -Raw | `
                     Get-StringReplacedBy -SubstitutionTable @{
                         '__DRIVER_NAME__' = $driver_name
                         '__DRIVER_ARCH_NAME__' = $driver_arch_name

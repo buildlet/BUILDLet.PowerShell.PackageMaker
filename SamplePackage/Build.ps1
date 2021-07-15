@@ -34,11 +34,11 @@ Param(
 
 # Required Module(s)
 #Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.0' }
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.0' }
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.2' }
 
 
 # Script Version
-$ScriptVersion = '1.6.0'
+$ScriptVersion = '1.6.2'
 
 # Foreground Color
 $ForegroundColor = 'Green'
@@ -102,34 +102,33 @@ Write-Host -ForegroundColor $ForegroundColor
 $Settings = Get-PrivateProfile -InputObject (Get-Content -Path $Path -Raw | Expand-InfStringKey -ErrorAction 'Stop') -ErrorAction 'Stop'
 
 
-# GET & SET Preferences
+# SET Preferences
 if ($Settings.ContainsKey('Preferences')) {
 
-    @('VerbosePreference', 'ErrorActionPreference') | ForEach-Object {
+    # for Preferences
+    $Settings.'Preferences'.Keys | ForEach-Object {
 
         # GET Preference
-        $pref = $_
+        $pref_key = $_
+        $pref_value = $Settings.'Preferences'.$pref_key
 
-        if ($Settings.'Preferences'.ContainsKey($pref)) {
-
-            # SET Preference
-            switch ($pref) {
-                'VerbosePreference' {
-                    
-                    # SET VerbosePreference
-                    $Script:VerbosePreference = $Settings.'Preferences'.$pref
-                }
-                'ErrorActionPreference' {
-
-                    # SET ErrorActionPreference
-                    $Script:ErrorActionPreference = $Settings.'Preferences'.$pref
-                }
-                Default {}
+        # SET Preference
+        switch ($pref_key) {
+            'VerbosePreference' {
+                
+                # SET VerbosePreference
+                $Script:VerbosePreference = $pref_value
             }
+            'ErrorActionPreference' {
 
-            # OUTPUT Preference
-            ("Set `$Script:$pref = '" + ($Settings.'Preferences'.$pref) + "'") | Write-Host -ForegroundColor $ForegroundColor
+                # SET ErrorActionPreference
+                $Script:ErrorActionPreference = $pref_value
+            }
+            Default {}
         }
+
+        # OUTPUT Preference
+        ("Set `$Script:$pref_key = '" + ($pref_value) + "'") | Write-Host -ForegroundColor $ForegroundColor
     }
 }
 

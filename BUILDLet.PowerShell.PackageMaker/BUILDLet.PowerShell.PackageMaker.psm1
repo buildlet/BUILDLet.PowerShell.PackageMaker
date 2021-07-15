@@ -96,7 +96,24 @@ Get-WindowsKitsToolPath -FileName inf2cat.exe
     # Input Processing Operations
     Process {
 
-        $KitsRoot10Path = (Get-Item -Path "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots").GetValue("KitsRoot10")
+        $InstalledRootsPath = "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots"
+        $InstalledRootsPath64 = "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows Kits\Installed Roots"
+
+        if (Test-Path -Path $InstalledRootsPath) {
+
+            $TargetPath = $InstalledRootsPath
+        }
+        elseif (Test-Path -Path $InstalledRootsPath64) {
+
+            $TargetPath = $InstalledRootsPath64
+        }
+        else {
+            throw [System.Management.Automation.ItemNotFoundException] `
+                "Both '$InstalledRootsPath' and '$InstalledRootsPath64' was not found."
+        }
+
+        # Get Value of "KitsRoot10"
+        $KitsRoot10Path = (Get-Item -Path $TargetPath).GetValue("KitsRoot10")
 
         if ($Version) {
             $KitsRoot10Path |
@@ -400,12 +417,14 @@ Get-AuthenticodeTimeStampString -FilePath 'D:\Setup.exe'
                 Invoke-SignTool @param_common `
                     -SignToolVersion $SignToolVersion `
                     -SignToolPlatform $SignToolPlatform `
+                    -ErrorAction SilentlyContinue `
                     -OutVariable Stdout 2>&1 > $null
             }
 
             'SignToolPath' {
                 Invoke-SignTool @param_common `
                     -SignToolPath $SignToolPath `
+                    -ErrorAction SilentlyContinue `
                     -OutVariable Stdout 2>&1 > $null
             }
 

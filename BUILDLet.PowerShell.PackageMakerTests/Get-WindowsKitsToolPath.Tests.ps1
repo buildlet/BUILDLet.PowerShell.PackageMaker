@@ -26,7 +26,7 @@
 $target_module_name = 'BUILDLet.PowerShell.PackageMaker'
 
 # Check Required Module
-. ($PSScriptRoot | Join-Path -ChildPath 'RequiredModule.ps1')
+. ($PSScriptRoot | Join-Path -ChildPath Test-RequiredModule.ps1)
 
 # Import Target Module
 # (Get Target Module, remove it if required, and import it again)

@@ -26,7 +26,7 @@
 $target_module_name = 'BUILDLet.PowerShell.PackageMaker'
 
 # Check Required Module
-. ($PSScriptRoot | Join-Path -ChildPath 'RequiredModule.ps1')
+. ($PSScriptRoot | Join-Path -ChildPath Test-RequiredModule.ps1)
 
 # Import Target Module
 # (Get Target Module, remove it if required, and import it again)
@@ -88,6 +88,8 @@ Describe "Get-AuthenticodeTimeStampString" {
 
                 # SET Test Inconclusive
                 if (-not ($_ | Test-Path)) {
+                    
+                    # Set Test Result as Inconclusive
                     Set-TestInconclusive -Message ("Target File '$_' was not found.")
                 }
             }

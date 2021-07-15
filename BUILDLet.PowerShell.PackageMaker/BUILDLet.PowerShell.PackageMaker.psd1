@@ -12,7 +12,7 @@
 RootModule = 'BUILDLet.PowerShell.PackageMaker.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.6.0'
+ModuleVersion = '1.6.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -52,7 +52,7 @@ Description = 'BUILDLet PackageMaker Toolkit for PowerShell'
 
 # Modules that must be imported into the global environment prior to importing this module
 RequiredModules = @(
-    @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.0' }
+    @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.2' }
 )
 
 # Assemblies that must be loaded prior to importing this module
@@ -124,7 +124,7 @@ PrivateData = @{
         # ReleaseNotes = ''
 
         # Prerelease string of this module
-        # Prerelease = 'beta1'
+        # Prerelease = 'beta3'
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false
@@ -145,4 +145,3 @@ PrivateData = @{
 # DefaultCommandPrefix = ''
 
 }
-
