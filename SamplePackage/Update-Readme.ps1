@@ -25,8 +25,8 @@
 # Parameter(s)
 Param (
     [Parameter(ParameterSetName = 'Path', Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
-    [ValidateScript({ Test-Path -Path $_ -PathType Leaf })]
-    [string]
+    [ValidateScript({ $_ | Resolve-Path | ForEach-Object { $_ | Test-Path -PathType Leaf }})]
+    [string[]]
     # 入力ファイルのパスを指定します。
     $Path,
 
@@ -49,17 +49,24 @@ Param (
 
 
 # Required Module(s)
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.0' }
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.0' }
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.2' }
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.2' }
 
 
 # SET Script Version
-$ScriptVersion = '1.6.0'
+$ScriptVersion = '1.6.2'
 
 # RETURN: Version
 if ($Version) { return $ScriptVersion }
 
 
-# Replace strings & Output it to File
-(Get-Content -Path $Path -Encoding $Encoding -Raw | Get-StringReplacedBy -SubstitutionTable $SubstitutionTable) `
-| Out-File -FilePath $Path -Encoding $Encoding -NoNewline
+# for Each Path
+$Path | Resolve-Path | ForEach-Object {
+
+    # Get file path
+    $filepath = $_.ProviderPath
+
+    # Replace strings & Output it to File
+    (Get-Content -Path $filepath -Encoding $Encoding -Raw | Get-StringReplacedBy -SubstitutionTable $SubstitutionTable) `
+    | Out-File -FilePath $filepath -Encoding $Encoding -NoNewline
+}

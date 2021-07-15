@@ -22,30 +22,19 @@
  THE SOFTWARE.
 ################################################################################>
 
-Param (
-    [Parameter(Position = 0, ValueFromPipeline = $true)]
-    [string]
-    $FilePath = 'Test',
+# Required Module:
+$required_module_name = 'BUILDLet.PowerShell.Utilities'
+$required_module_version = '1.6.2'
 
-    [Parameter(Mandatory = $true, Position = 1)]
-    [SecureString]
-    $Password
-)
+# GET Required Module
+$required_module = Get-InstalledModule -Name $required_module_name -RequiredVersion $required_module_version -AllowPrerelease
 
-# GET File path base
-$filepath_base = $FilePath -replace @(
-    Split-Path -Path $FilePath -Leaf
-    [System.IO.Path]::GetFileNameWithoutExtension($FilePath)
-)
+# Check Required Module installed
+if ($null -eq $required_module) {
 
-# NEW Self Signed Certificate
-$cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "BUILDLet Code Signing Test Certificate"
+    # OUTPUT Error Message
+    Write-Error -Message "'$required_module_name' was not found." -Category ResourceUnavailable -ErrorId 'ModuleNotFound'
 
-# EXPORT as CER File
-Export-Certificate  -FilePath ($filepath_base + '.cer') -Cert $cert -Type CERT
-
-# EXPORT as PFX File
-Export-PfxCertificate -Cert $cert -FilePath ($filepath_base + '.pfx') -Password $Password -Force
-
-# REMOVE Certificate
-Remove-Item -Path $cert.PSPath
+    # Break
+    break
+}

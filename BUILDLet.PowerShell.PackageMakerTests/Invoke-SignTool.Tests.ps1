@@ -26,7 +26,7 @@
 $target_module_name = 'BUILDLet.PowerShell.PackageMaker'
 
 # Check Required Module
-. ($PSScriptRoot | Join-Path -ChildPath 'RequiredModule.ps1')
+. ($PSScriptRoot | Join-Path -ChildPath Test-RequiredModule.ps1)
 
 # Import Target Module
 # (Get Target Module, remove it if required, and import it again)
@@ -66,7 +66,7 @@ Describe "Invoke-SignTool" {
                 SignToolPlatform = $null
                 SignToolPath = $null
                 Command = 'sign'
-                Options = @('/f ..\..\Test.pfx', '/p 12345', '/t http://timestamp.digicert.com/?alg=sha1', '/v')
+                Options = @('/f ..\Test.pfx', '/p 12345', '/t http://timestamp.digicert.com/?alg=sha1', '/v')
                 FilePath = @('Test.dll', 'Test2.dll')
                 OutputEncoding = [System.Text.Encoding]::UTF8
                 PassThru = $true
@@ -83,6 +83,9 @@ Describe "Invoke-SignTool" {
             Param($TestDirName, $SignToolVersion, $SignToolPlatform, $SignToolPath, $Command, $Options, $FilePath,
                 $OutputEncoding, $PassThru, $RetryCount, $RetrySecond, $PacketSize, $Verbose)
 
+
+            # ARRANGE: New Certificate (only PFX)
+            New-TestCertificate -ExportFormat PFX -Password (ConvertTo-SecureString -String 12345 -AsPlainText -Force)
 
             # ARRANGE: NEW Package Directory
             New-Item -Path ($TargetDir | Join-Path -ChildPath $TestDirName) -ItemType Directory -Force
@@ -102,7 +105,6 @@ Describe "Invoke-SignTool" {
 
             # ARRANGE: Set Location
             Set-Location -Path ($TargetDir | Join-Path -ChildPath $TestDirName)
-
             
             # ACT
             if ($SignToolPath) {
