@@ -31,14 +31,12 @@ Param(
     $Path = ($PSScriptRoot | Join-Path -ChildPath 'Build.ini')
 )
 
-
 # Required Module(s)
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.0' }
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.2' }
-
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.3' }
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.3' }
 
 # Script Version
-$ScriptVersion = '1.6.2'
+$ScriptVersion = '1.6.3'
 
 # Foreground Color
 $ForegroundColor = 'Green'
@@ -76,6 +74,24 @@ Function ConvertFrom-Expression($expression) {
     return $expression
 }
 
+# Out-ElapsedTime
+Function Out-ElapsedTime {
+
+    # Parameter(s)
+    Param([datetime]$StartTime)
+
+    # GET Curent Time
+    $CurrentTime = Get-Date
+
+    # GET Curent Time Text (as Formated Text)
+    $CurrentTimeText = ($CurrentTime).ToString('yyyy/MM/dd hh:mm:ss')
+
+    # GET Elapsed Time Text (as Formated Text)
+    $ElapsedTimeText = ($CurrentTime - $StartTime).ToString()
+
+    # OUTPUT Current Time and Elapsed Time
+    "$CurrentTimeText (Elapsed Time: $ElapsedTimeText)" | Write-Host -ForegroundColor $ForegroundColor
+}
 
 ################################################################################
 # START
@@ -92,8 +108,8 @@ Function ConvertFrom-Expression($expression) {
 "@ |
 Write-Host -ForegroundColor $ForegroundColor
 
-# OUTPUT: START Time & $Path (Setting File Name)
-($StartTime = Get-Date).ToString('yyyy/MM/dd hh:mm:ss') + ' <<<< START >>>>' | Write-Host -ForegroundColor $ForegroundColor
+# OUTPUT: START Time
+($StartTime = Get-Date).ToString('yyyy/MM/dd hh:mm:ss') | Write-Host -ForegroundColor $ForegroundColor
 
 # OUTPUT
 "Read Settings from '$Path'..." | Write-Host -ForegroundColor $ForegroundColor
@@ -144,8 +160,9 @@ $Settings.'Tasks'.Keys | ForEach-Object {
     $Task = $value
     $Command = $Settings.$Task.'Command'
 
-    # OUTPUT: Key, Task and Command
+    # OUTPUT: Current Time, Elapsed Time, Key, Task and Command
     ''
+    Out-ElapsedTime $StartTime
     "Task[$key]: $Task" | Write-Host -ForegroundColor $ForegroundColor
     "  $Command" | Write-Host -ForegroundColor $ForegroundColor
 
@@ -270,11 +287,7 @@ $Settings.'Tasks'.Keys | ForEach-Object {
 }
 # for each Tasks
 
-
-# GET End Time (as Formated Text)
-$EndTimeText = ($EndTime = Get-Date).ToString('yyyy/MM/dd hh:mm:ss')
-
 # OUTPUT: END Time (and Elapsed Time)
 ''
-"$EndTimeText <<<< END >>>> (Elapsed Time = " + ($EndTime - $StartTime).ToString() + ")" | Write-Host -ForegroundColor $ForegroundColor
+Out-ElapsedTime $StartTime
 #>

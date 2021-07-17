@@ -58,14 +58,12 @@ Param(
     $Version
 )
 
-
 # Required Module(s)
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.2' }
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.2' }
-
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.3' }
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.3' }
 
 # SET Script Version
-$ScriptVersion = '1.6.2'
+$ScriptVersion = '1.6.3'
 
 # RETURN: Version
 if ($Version) { return $ScriptVersion }
@@ -135,73 +133,73 @@ $RAW_content = `
 $HTML_contents = Get-HtmlContent -InputObject $RAW_content
 
 
-# for Model(s)
+# for Level 1 (H3: Model)
 $Path | Get-ChildItem -Directory | ForEach-Object {
 
-    # GET Directory Path of 'Model'
+    # GET Directory Path of Level 1 (H3: Model)
     $model_dir_path = $_.FullName
 
-    # Paremeter (H3) for New-BaseHtmlRawContent function
+    # Paremeter of New-BaseHtmlRawContent function for Level 1 (H3: Model)
     $parmeter_H3 = @{
         Path = $model_dir_path
-        BaseHtmlFilePath = './ReleaseNotes_Level-1_H3.html'
+        BaseHtmlFilePath = './ReleaseNotes_Level1_H3.html'
         TargetString = '__LEVEL1_TITLE__'
         StringTable = $StringTable
     }
 
-    # GET Base HTML RAW content (H3)
+    # GET Base HTML RAW content of Level 1 (H3: Model)
     $model_RAW_content = New-BaseHtmlRawContent @parmeter_H3
 
-    # GET HTML contents (H3)
+    # GET HTML contents of Level 1 (H3: Model)
     $model_HTML_contents = Get-HtmlContent -InputObject $model_RAW_content
 
 
-    # for Driver(s)
+    # for Level 2 (H4: Driver)
     $model_dir_path | Get-ChildItem -Directory | ForEach-Object {
 
-        # GET Directory Path of 'Driver'
+        # GET Directory Path of Level 2 (for H4: Driver)
         $driver_dir_path = $_.FullName
 
-        # Paremeter (H4) for New-BaseHtmlRawContent function
+        # Paremeter of New-BaseHtmlRawContent function for Level 2 (H4: Driver)
         $parmeter_H4 = @{
             Path = $driver_dir_path
-            BaseHtmlFilePath = './ReleaseNotes_Level-2_H4.html'
+            BaseHtmlFilePath = './ReleaseNotes_Level2_H4.html'
             TargetString = '__LEVEL2_TITLE__'
             StringTable = $StringTable
         }
 
-        # GET Base HTML RAW content (H4)
+        # GET Base HTML RAW content of Level 2 (H4: Driver)
         $driver_RAW_content = New-BaseHtmlRawContent @parmeter_H4
 
-        # GET HTML contents (H4)
+        # GET HTML contents of Level 2 (H4: Driver)
         $driver_HTML_contents = Get-HtmlContent -InputObject $driver_RAW_content
 
         
-        # for Language(s)
+        # for Level 3 (H5: Language)
         $driver_dir_path | Get-ChildItem -Directory | ForEach-Object {
 
-            # GET Directory Path of 'Driver'
+            # GET Directory Path of Level 3 (H5: Language)
             $lang_dir_path = $_.FullName
 
-            # Paremeter (H5) for New-BaseHtmlRawContent function
+            # Paremeter of New-BaseHtmlRawContent function for Level (H5: Language)
             $parmeter_H5 = @{
                 Path = $lang_dir_path
-                BaseHtmlFilePath = './ReleaseNotes_Level-3_H5.html'
+                BaseHtmlFilePath = './ReleaseNotes_Level3_H5.html'
                 TargetString = '__LEVEL3_TITLE__'
                 StringTable = $StringTable
             }
 
-            # GET Base HTML RAW content (H5)
+            # GET Base HTML RAW content of Level 3 (H5: Language)
             $language_RAW_content = New-BaseHtmlRawContent @parmeter_H5
 
-            # GET HTML contents (H5)
+            # GET HTML contents of Level 3 (H5: Language)
             $language_HTML_contents = Get-HtmlContent -InputObject $language_RAW_content
 
 
-            # for Archtecture(s) : x86 / x64
+            # for for TR in Table in Level 3
             $lang_dir_path | Get-ChildItem -Directory | ForEach-Object {
 
-                # GET Directory Path of Archtecture (x86 or x64)
+                # GET Directory Path of Level 4 (Archtecture (x86 or x64))
                 $arch_dir_path = $_.FullName
                 $arch_dir_name = $arch_dir_path | Split-Path -Leaf
 
@@ -211,7 +209,7 @@ $Path | Get-ChildItem -Directory | ForEach-Object {
                     : $arch_dir_name
 
 
-                # GET Package Directory Path (= Archtecture Directory Path)
+                # GET Package Directory Path (= Level 4: Archtecture Directory Path)
                 $package_dir_path = $arch_dir_path
 
                 # GET Settings from INF File
@@ -234,7 +232,7 @@ $Path | Get-ChildItem -Directory | ForEach-Object {
 
                 # GET RAW content of TR: Version
                 $version_RAW_content = `
-                    Get-Content -Path './ReleaseNotes_Level-4_TR.html' -Raw | `
+                    Get-Content -Path './ReleaseNotes_Level4_TR.html' -Raw | `
                     Get-StringReplacedBy -SubstitutionTable @{
                         '__DRIVER_NAME__' = $driver_name
                         '__DRIVER_ARCH_NAME__' = $driver_arch_name
@@ -244,25 +242,31 @@ $Path | Get-ChildItem -Directory | ForEach-Object {
                         '__DRIVER_SIGNATURE_TIMESTAMP__' = $driver_signature_timestamp
                     }
 
-                # GET HTML contents of TR: Version
+                # GET HTML contents of Level 4 (TR)
                 $version_HTML_contents = Get-HtmlContent -InputObject $version_RAW_content
 
 
-                # ADD HTML content of 'Version' into 'Language'
+                # ADD HTML content of Level 4 (TR) into Table in Level 3 (H5)
                 $language_HTML_contents['table', 0]['tbody', 0].Contents.AddRange($version_HTML_contents)
             }
 
-            # ADD HTML content of 'Language' into 'Driver'
+            # ADD HTML content of Level 3 (H5) into Level 2 (H4)
             $driver_HTML_contents['div', 0].Contents.AddRange($language_HTML_contents)
         }
 
-        # ADD HTML content of 'Driver' into 'Model'
+        # ADD HTML content of Level 2 (H4) into Level 1 (H3)
         $model_HTML_contents['div', 0].Contents.AddRange($driver_HTML_contents)
     }
 
-    # ADD HTML content of 'Driver' into Releae Notes
+    # ADD HTML content of Level 1 (H3) into Releae Notes
     $HTML_contents['html', 0]['body', 0]['div', 0]['div', 1].Contents.AddRange($model_HTML_contents)
 }
+
+# GET HTML contents of Restrictions
+$restrictions_HTML_contents = Get-HtmlContent -Path '.\ReleaseNotes_Restrictions.html'
+
+# ADD HTML content of Restrictions into Releae Notes
+$HTML_contents['html', 0]['body', 0]['div', 0]['div', 2].Contents.AddRange($restrictions_HTML_contents)
 
 
 # OUTPUT
