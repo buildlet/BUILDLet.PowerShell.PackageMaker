@@ -59,11 +59,11 @@ Param(
 )
 
 # Required Module(s)
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.3' }
-#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.3' }
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.Utilities'; ModuleVersion = '1.6.4' }
+#Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.4' }
 
 # SET Script Version
-$ScriptVersion = '1.6.3'
+$ScriptVersion = '1.6.4'
 
 # RETURN: Version
 if ($Version) { return $ScriptVersion }
