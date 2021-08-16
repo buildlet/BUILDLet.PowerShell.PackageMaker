@@ -37,8 +37,9 @@ Build script and its related files are the followings.
 
 - "Build.ps1": Build script.
 - "Build.ini": Setting file.
-- "Get-Settings.ps1": Utility command to get settings from INI file customized for this build script.
-- "Update-Readme.ps1": Utility command to update readme file customized for this build script.
+- ~~"Get-Settings.ps1": Utility command to get settings from INI file customized for this build script.~~
+- ~~"Update-Readme.ps1": Utility command to update readme file customized for this build script.~~
+- "New-ReleaseNotes.ps1": Utility command to create Release Notes as HTML file including version information of this release.
 
 Dummy package consists of the followings.
 
@@ -69,7 +70,8 @@ To build the sample package, please do the following procedure.
    .\Build.ps1
    ```
 
-4. As the artifact of the sample package, the ISO image file "Sample.iso" is generated at "Destination" directory under "SamplePackage" directory. (e.g., "C:\Temp\SamplePackage\Destination\Sample.iso)
+4. As the artifact of the sample package, the ISO image file "Sample.iso" is generated at "Destination" directory under "SamplePackage" directory. (e.g., "C:\Temp\SamplePackage\Destination\Sample.iso)  
+Also, Release Notes as HTML file is generated in the same directory.
 
 License
 -------
