@@ -36,7 +36,7 @@ Param(
 #Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.7' }
 
 # Script Version
-$ScriptVersion = '1.6.7'
+$ScriptVersion = '1.6.8'
 
 # Foreground Color
 $ForegroundColor = 'Green'
@@ -153,27 +153,27 @@ if ($Settings.ContainsKey('Preferences')) {
 $Settings.'Tasks'.Keys | ForEach-Object {
 
     # GET Key & Value
-    $key = $_
-    $value = $Settings.'Tasks'.$key
+    $task_id = $_
+    $task_name = $Settings.'Tasks'.$task_id
 
     # GET Task & Command
-    $Task = $value
-    $Command = $Settings.$Task.'Command'
+    $Task = $Settings.$task_name
+    $command = $Task.'Command'
 
     # OUTPUT: Current Time, Elapsed Time, Key, Task and Command
     ''
     Out-ElapsedTime $StartTime
-    "Task[$key]: $Task" | Write-Host -ForegroundColor $ForegroundColor
-    "  $Command" | Write-Host -ForegroundColor $ForegroundColor
+    "Task[$task_id]: $task_name" | Write-Host -ForegroundColor $ForegroundColor
+    "  $command" | Write-Host -ForegroundColor $ForegroundColor
 
     # GET Command Parameter(s)
     $Parameters = @{}
     $OutputRedirection = $null
-    $Settings.$Task.Keys | Where-Object { $_ -ne 'Command' } | ForEach-Object {
+    $Task.Keys | Where-Object { $_ -ne 'Command' } | ForEach-Object {
 
         # GET Parameter Name & Value
         $param_name = $_
-        $param_value = $Settings.$Task.$_
+        $param_value = $Task.$param_name
 
         # Check Parameter
         if (($param_name -match '\> *\$null') -and ($null -eq $param_value)) {
@@ -190,36 +190,34 @@ $Settings.'Tasks'.Keys | ForEach-Object {
         
             # BUILD Command Parameter(s)
 
-            # UPDATE Parameter Value as Array or Hashtable
-            if ($param_value -like "$Task.*") {
+            # UPDATE Parameter Value as Array, Hashtable or other
+            if ($param_value -like "@ARRAY:*") {
 
-                # Check if all Keys are int, or not
-                $int_Keys = @()
-                $parsed = -1
-                $Settings.$param_value.Keys | ForEach-Object { $int_Keys += [int]::TryParse($_, [ref]$parsed) }
+                # BUILD Parameter as Array
+                $array_section = $Settings.$param_value
+                $array_param = @()
+                $array_section.Keys | Sort-Object | ForEach-Object {
 
-                if ($int_Keys -notcontains $false) {
-                
-                    # BUILD Parameter as Array
-                    $param_array = @()
-                    $Settings.$param_value.Keys | Sort-Object | Where-Object {
-
-                        # ADD value of Parameter Array
-                        $param_array += ConvertFrom-Expression($Settings.$param_value.$_)
-                    }
-                    $param_value = $param_array
+                    # ADD value of Parameter Array
+                    $array_param += ConvertFrom-Expression($array_section.$_)
                 }
-                else {
+
+                # Overwrite as Array
+                $param_value = $array_param
+            }
+            elseif ($param_value -like "@HASHTABLE:*") {
                     
-                    # BUILD Parameter as Hashtable
-                    $param_hashtable = @{}
-                    $Settings.$param_value.Keys | Where-Object {
+                # BUILD Parameter as Hashtable
+                $hashtable_section = $Settings.$param_value
+                $hashtable_param = @{}
+                $hashtable_section.Keys | ForEach-Object {
 
-                        # ADD value of Parameter Hashtable
-                        $param_hashtable += @{ $_ = ConvertFrom-Expression($Settings.$param_value.$_) }
-                    }
-                    $param_value = $param_hashtable
+                    # ADD value of Parameter Hashtable
+                    $hashtable_param += @{ $_ = ConvertFrom-Expression($hashtable_section.$_) }
                 }
+
+                # Overwrite as Hashtable
+                $param_value = $hashtable_param
             }
             else {
 
@@ -234,16 +232,16 @@ $Settings.'Tasks'.Keys | ForEach-Object {
             if ($param_value -is [array]) {
 
                 # OUTPUT: Parameter as Array
-                "    -$param_name {" | Write-Host -ForegroundColor $ForegroundColor
+                "    -$param_name @(" | Write-Host -ForegroundColor $ForegroundColor
                 for ($i = 0; $i -lt $param_value.Count; $i++) {
                     ("      " + $param_value[$i]) | Write-Host -ForegroundColor $ForegroundColor
                 }
-                "    }" | Write-Host -ForegroundColor $ForegroundColor
+                "    )" | Write-Host -ForegroundColor $ForegroundColor
             }
             elseif ($param_value -is [hashtable]) {
 
                 # OUTPUT: Parameter as Hashtable
-                "    -$_ {" | Write-Host -ForegroundColor $ForegroundColor
+                "    -$_ @{" | Write-Host -ForegroundColor $ForegroundColor
                 $param_value.Keys | ForEach-Object {
                     ("      " + $_ + ' = ' + $param_value.$_) | Write-Host -ForegroundColor $ForegroundColor
                 }
@@ -263,10 +261,10 @@ $Settings.'Tasks'.Keys | ForEach-Object {
     }
 
     # Keys includes 'Command' 
-    if ($null -ne $Command) {
+    if ($null -ne $command) {
 
         # GET Expression
-        $Expression = $Command
+        $Expression = $command
 
         # Append Parameters to Expression
         if ($Parameters.Count -gt 0) { $Expression += ' @Parameters' }
