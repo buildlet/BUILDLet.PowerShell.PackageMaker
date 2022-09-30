@@ -96,24 +96,24 @@ Get-WindowsKitsToolPath -FileName inf2cat.exe
     # Input Processing Operations
     Process {
 
-        $InstalledRootsPath = "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots"
-        $InstalledRootsPath64 = "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows Kits\Installed Roots"
+        $HKLM_InstalledRootsPath = "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots"
+        $HKLM_InstalledRootsPath64 = "HKLM:\HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows Kits\Installed Roots"
 
-        if (Test-Path -Path $InstalledRootsPath) {
+        if (Test-Path -Path $HKLM_InstalledRootsPath) {
 
-            $TargetPath = $InstalledRootsPath
+            $HKLM_TargetPath = $HKLM_InstalledRootsPath
         }
-        elseif (Test-Path -Path $InstalledRootsPath64) {
+        elseif (Test-Path -Path $HKLM_InstalledRootsPath64) {
 
-            $TargetPath = $InstalledRootsPath64
+            $HKLM_TargetPath = $HKLM_InstalledRootsPath64
         }
         else {
             throw [System.Management.Automation.ItemNotFoundException] `
-                "Both '$InstalledRootsPath' and '$InstalledRootsPath64' was not found."
+                "Both '$HKLM_InstalledRootsPath' and '$HKLM_InstalledRootsPath64' was not found."
         }
 
         # Get Value of "KitsRoot10"
-        $KitsRoot10Path = (Get-Item -Path $TargetPath).GetValue("KitsRoot10")
+        $KitsRoot10Path = (Get-Item -Path $HKLM_TargetPath).GetValue("KitsRoot10")
 
         if ($Version) {
             $KitsRoot10Path |
@@ -268,7 +268,7 @@ https://msdn.microsoft.com/ja-jp/library/8s9b9yaz.aspx
 
         # GET Paths of SignTool.exe (and Validate it)
         if ($SignToolPath) {
-            if (-not ($PSCmdlet.GetResolvedProviderPathFromPSPath($SignToolPath)[0] | Test-Path)) {
+            if (-not ($PSCmdlet.GetResolvedProviderPathFromPSPath($SignToolPath, [ref](Get-PSProvider -PSProvider FileSystem))[0] | Test-Path)) {
                 Write-Error -Exception (New-Object System.IO.FileNotFoundException)
             }
         }
@@ -560,7 +560,7 @@ https://msdn.microsoft.com/en-us/library/windows/hardware/ff547089.aspx
 
         # GET Inf2Cat.exe Path (and Validate it)
         if ($Inf2CatPath) {
-            if (-not ($PSCmdlet.GetResolvedProviderPathFromPSPath($Inf2CatPath)[0] | Test-Path)) {
+            if (-not ($PSCmdlet.GetResolvedProviderPathFromPSPath($Inf2CatPath, [ref](Get-PSProvider -PSProvider FileSystem))[0] | Test-Path)) {
                 Write-Error -Exception (New-Object System.IO.FileNotFoundException)
             }
         }

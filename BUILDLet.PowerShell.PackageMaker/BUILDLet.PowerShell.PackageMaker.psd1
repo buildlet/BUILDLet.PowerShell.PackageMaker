@@ -12,7 +12,7 @@
 RootModule = 'BUILDLet.PowerShell.PackageMaker.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.6.6'
+ModuleVersion = '1.6.7'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -124,7 +124,7 @@ PrivateData = @{
         # ReleaseNotes = ''
 
         # Prerelease string of this module
-        # Prerelease = 'beta1'
+        # Prerelease = 'beta2'
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false
