@@ -47,6 +47,7 @@ Dummy package consists of the followings.
   In this Sample Package, the catalog files will be created, and signature will be added to these, using commands which respectively wrapps "inf2cat" and "signtool" utility.
 - Readme: Dummy readme files in English and Japanese.  
   In this Sample Package, date, driver versions and some other strings will be updated.
+- Sample.pfx: PFX file to be used for code signing.
 - Autorun.inf
 - Sample.ico
 
@@ -70,7 +71,19 @@ To build the sample package, please do the following procedure.
    .\Build.ps1
    ```
 
-4. As the artifact of the sample package, the ISO image file "Sample.iso" is generated at "Destination" directory under "SamplePackage" directory. (e.g., "C:\Temp\SamplePackage\Destination\Sample.iso)  
+4. If the following error message is show, certificate file to be used for code signing may be expired.
+
+   ```cmd
+   SignTool Error: No certificates were found that met all the given criteria.
+   ```
+
+   To create new PFX file, type the following command. Please note that this command should be run as Administrator.
+
+   ```PowerShell
+   New-TestCertificate -Path .\Sample -Subject 'BUILDLet Sample Package' -Verbose
+   ```
+
+5. As the artifact of the sample package, the ISO image file "Sample.iso" is generated at "Destination" directory under "SamplePackage" directory. (e.g., "C:\Temp\SamplePackage\Destination\Sample.iso)  
 Also, Release Notes as HTML file is generated in the same directory.
 
 License
