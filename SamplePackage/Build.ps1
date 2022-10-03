@@ -36,7 +36,7 @@ Param(
 #Requires -Module @{ ModuleName = 'BUILDLet.PowerShell.PackageMaker'; ModuleVersion = '1.6.7' }
 
 # Script Version
-$ScriptVersion = '1.6.8'
+$ScriptVersion = '1.6.7.2'
 
 # Foreground Color
 $ForegroundColor = 'Green'
